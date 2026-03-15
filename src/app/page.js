@@ -1,63 +1,102 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import deleteIcon from "../app/excluir.svg";
+import { Lightbulb } from 'lucide-react';
 
 export default function Home() {
+  const [tasks, setTasks] = useState(() => {
+    if (typeof window === "undefined") return [];
+    const salvas = localStorage.getItem("tasks");
+    return salvas ? JSON.parse(salvas) : [];
+  });
+  const [newTask, setNewTask] = useState("");
+  const [concluida, setConcluida] = useState(false);
+
+  const adicionarTask = () => {
+    if (newTask.trim() !== "") {
+      setTasks([...tasks, { id: Date.now(), text: newTask }]);
+      setNewTask("");
+    }
+  };
+
+  const removerTask = (id) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const concluirtask = (id) => {
+    setTasks(tasks.map((task) => task.id === id ? {...task, concluida: !task.concluida} : task));
+    setConcluida(!concluida);
+  }
+
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="w-full min-h-screen flex flex-col items-center py-10 px-5 sm:px-10 bg-[#F9F5F4] text-gray-900 font-poppins">
+      <main className="w-full max-w-2xl flex-1 flex flex-col">
+        <section className="flex flex-col gap-5 w-full flex-1">
+          <h1 className="text-3xl font-bold">Today</h1>
+          <div className="flex items-center gap-2 justify-center p-3 bg-zinc-200 rounded-md">
+            <Lightbulb />
+            <p>Adicione suas tarefas do dia e organize-as facilmente!</p>
+          </div>
+          <article className="w-full">
+            <ul className="flex flex-col gap-5 list-none mb-5 w-full">
+              {tasks.map((task) => (
+                <li
+                  key={task.id}
+                  className={`flex gap-5 items-center p-2.5 bg-[#eee9e8] rounded-md ${task.concluida ? "bg-green-200" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 min-w-[20px] rounded-full cursor-pointer accent-[#9F9F9F]"
+                    id={`check-${task.id}`}
+                    checked={task.concluida}
+                    onChange={() => concluirtask(task.id)}
+                  />
+                  <span className={`flex-1 font-medium transition-all ${task.concluida ? "line-through text-gray-600" : ""}`}>{task.text}</span>
+                  <button
+                    className="flex flex-1 justify-end w-fit bg-transparent border-none cursor-pointer"
+                    onClick={() => removerTask(task.id)}
+                  >
+                    <Image
+                      src={deleteIcon}
+                      alt="icon de apagar"
+                      className="w-6 h-6 hover:opacity-75 transition-opacity"
+                    />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </section>
+
+        <div className="flex justify-center items-center w-full gap-2.5 mt-auto mb-5">
+          <input
+            type="text"
+            placeholder="Nova tarefa..."
+            className="bg-[#e7e3e2] p-2.5 w-full rounded-lg border-none outline-none text-gray-800 placeholder-gray-500 font-poppins"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                adicionarTask();
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="py-2.5 px-4 rounded-lg border-none bg-[#393433] text-white cursor-pointer font-medium hover:bg-black transition-colors font-poppins"
+            onClick={adicionarTask}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Add
+          </button>
+
         </div>
       </main>
     </div>
